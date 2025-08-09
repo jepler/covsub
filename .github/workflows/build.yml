@@ -43,6 +43,8 @@ jobs:
     - name: Inspect system details
       run: |
         python -v -mcoverage --help
+        python -c "import sys; print(sys.path)"
+        python -c "import coverage; print(coverage.__file__)"
 
     - name: Coverage
       run: |
