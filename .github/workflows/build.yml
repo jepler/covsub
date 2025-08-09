@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: 2021-2024 Jeff Epler
+#
+# SPDX-License-Identifier: CC0-1.0
+
+name: Test wwvbgen
+
+on:
+  push:
+  pull_request:
+  release:
+    types: [published]
+  check_suite:
+    types: [rerequested]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+        - '3.13'
+        os-version:
+        - 'ubuntu-latest'
+        - 'windows-latest'
+        - 'macos-latest'
+
+    runs-on: ${{ matrix.os-version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install deps
+      run: |
+        python -mpip install wheel
+        python -mpip install coverage
+
+    - name: Inspect system details
+      run: |
+        python -v -mcoverage --help
+
+    - name: Coverage
+      run: |
+        python -mcoverage run subfunctions.py 0 1 2
+        python -mcoverage combine
+        python -mcoverage xml --include "*.py"
+        python -mcoverage html --include "*.py"
+        python -mcoverage report --fail-under=90 --include "*.py"
+
+    - name: Upload Coverage as artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage for ${{ matrix.python-version }} on ${{ matrix.os-version }}
+        path: coverage.xml
