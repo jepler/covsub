@@ -17,14 +17,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version:
-        - '3.13'
-        os-version:
-        - 'ubuntu-latest'
-        - 'windows-latest'
-        - 'macos-latest'
+        parallelism:
+        - 1
+        - 10
 
-    runs-on: ${{ matrix.os-version }}
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
       with:
@@ -33,30 +30,23 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.x'
 
     - name: Install deps
       run: |
         python -mpip install wheel
         python -mpip install coverage
 
-    - name: Inspect system details
-      run: |
-        python -v -mcoverage --help
-        python -c "import sys; print(sys.path)"
-        python -c "import coverage; print(coverage.__file__)"
-
     - name: Coverage
       run: |
-        python -mcoverage run subfunctions.py 0 1 2
-        python -mcoverage combine
+        make -j${{ matrix.parallelism }}
         python -mcoverage xml --include "*.py"
         python -mcoverage html --include "*.py"
-        python -mcoverage report --fail-under=90 --include "*.py"
+        python -mcoverage report --fail-under=100 --include "*.py"
 
     - name: Upload Coverage as artifact
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: coverage for ${{ matrix.python-version }} on ${{ matrix.os-version }}
+        name: coverage with parallelism ${{ matrix.parallelism }}
         path: coverage.xml
