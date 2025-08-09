@@ -35,7 +35,7 @@ jobs:
     - name: Install deps
       run: |
         python -mpip install wheel
-        python -mpip install coverage
+        python -mpip install git+https://github.com/nedbat/coveragepy.git
 
     - name: Coverage
       run: |
